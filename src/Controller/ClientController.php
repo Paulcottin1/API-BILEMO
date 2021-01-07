@@ -91,4 +91,20 @@ class ClientController extends AbstractController
             return $client;
         }
     }
+
+    /**
+     * @Rest\Delete(
+     *     path="/clients/{id}",
+     *     requirements = {"id"="\d+"}
+     * )
+     * @Rest\View(StatusCode = 204)
+     * @param Client $client
+     * @return Client
+     */
+    public function deleteClient(Client $client)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->remove($client);
+        $entityManager->flush();
+    }
 }
