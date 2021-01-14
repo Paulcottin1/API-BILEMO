@@ -19,7 +19,7 @@ class ClientController extends AbstractController
 {
     /**
      * Add Client
-     * @Rest\Post(path="/client")
+     * @Rest\Post(path="/api/client")
      * @Rest\View(StatusCode = 201)
      * @ParamConverter("client", converter="fos_rest.request_body")
      * @param Client $client
@@ -36,7 +36,7 @@ class ClientController extends AbstractController
 
     /**
      * Return the clients list
-     * @Rest\Get(path="/clients")
+     * @Rest\Get(path="/api/clients")
      * @Rest\View(StatusCode = 200)
      * @param ClientRepository $clientRepository
      * @return Client[]
@@ -49,7 +49,7 @@ class ClientController extends AbstractController
     /**
      * Return client detail
      * @Rest\Get(
-     *     path="/clients/{id}",
+     *     path="/api/clients/{id}",
      *     requirements = {"id"="\d+"}
      * )
      * @Rest\View(StatusCode = 200)
@@ -63,7 +63,7 @@ class ClientController extends AbstractController
 
     /**
      * @Rest\Put(
-     *     path="/clients/{id}",
+     *     path="/api/clients/{id}",
      *     requirements = {"id"="\d+"}
      * )
      * @Rest\View(StatusCode = 201)
@@ -94,12 +94,11 @@ class ClientController extends AbstractController
 
     /**
      * @Rest\Delete(
-     *     path="/clients/{id}",
+     *     path="/api/clients/{id}",
      *     requirements = {"id"="\d+"}
      * )
      * @Rest\View(StatusCode = 204)
      * @param Client $client
-     * @return Client
      */
     public function deleteClient(Client $client)
     {

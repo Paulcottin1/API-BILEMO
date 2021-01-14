@@ -9,7 +9,7 @@ fos_rest:
     serialize_null: true
   format_listener:
     rules:
-      - { path: '^/', priorities: [ 'json' ], fallback_format: 'json' }
+      - { path: '^/api', priorities: [ 'json' ], fallback_format: 'json' }
 
 sensio_framework_extra:
   request: { converters: true }
