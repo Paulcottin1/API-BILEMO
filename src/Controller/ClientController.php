@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Repository\ClientRepository;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use Knp\Component\Pager\PaginatorInterface;
+use Psr\Cache\InvalidArgumentException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,6 +17,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ClientController extends AbstractController
 {
@@ -47,13 +51,26 @@ class ClientController extends AbstractController
      *     serializerGroups={"client"}
      * )
      * @param ClientRepository $clientRepository
+     * @param TagAwareCacheInterface $cache
+     * @param PaginatorInterface $paginator
+     * @param Request $request
      * @return Client[]
+     * @throws InvalidArgumentException
      */
-    public function clientsList(ClientRepository $clientRepository)
+    public function clientsList(ClientRepository $clientRepository, TagAwareCacheInterface $cache, PaginatorInterface $paginator, Request $request)
     {
-        return $clientRepository->findBy([
-            'user' => $this->getUser()
-        ]);
+        $page = $request->query->getInt('page', 1);
+
+        return $cache->get('users'. $this->getUser()->getId() . $page,
+            function (ItemInterface $item) use ($clientRepository, $paginator, $page) {
+                $item->expiresAfter(3600);
+                $item->tag('user');
+                $data = $clientRepository->findBy([
+                    'user' => $this->getUser()
+                ]);
+
+                return $paginator->paginate($data, $page, 4);
+            });
     }
 
     /**

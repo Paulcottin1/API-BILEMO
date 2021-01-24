@@ -108,6 +108,12 @@
             "ref": "384cec52df45f3bfd46a09930d6960a58872b268"
         }
     },
+    "knplabs/knp-components": {
+        "version": "v3.0.0"
+    },
+    "knplabs/knp-paginator-bundle": {
+        "version": "v5.4.2"
+    },
     "lcobucci/jwt": {
         "version": "3.4.2"
     },
