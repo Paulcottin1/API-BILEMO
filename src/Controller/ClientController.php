@@ -61,10 +61,10 @@ class ClientController extends AbstractController
     {
         $page = $request->query->getInt('page', 1);
 
-        return $cache->get('users'. $this->getUser()->getId() . $page,
+        return $cache->get('clients'. $this->getUser()->getId() . $page,
             function (ItemInterface $item) use ($clientRepository, $paginator, $page) {
                 $item->expiresAfter(3600);
-                $item->tag('user');
+                $item->tag('client');
                 $data = $clientRepository->findBy([
                     'user' => $this->getUser()
                 ]);
@@ -85,11 +85,19 @@ class ClientController extends AbstractController
      * )
      * @Security("client.getUser().getId() === user.getId()")
      * @param Client $client
+     * @param TagAwareCacheInterface $cache
      * @return Client
+     * @throws InvalidArgumentException
      */
-    public function client(Client $client)
+    public function client(Client $client, TagAwareCacheInterface $cache)
     {
-        return $client;
+        return $cache->get('client'. $client->getId(),
+            function (ItemInterface $item) use ($client) {
+                $item->expiresAfter(3600);
+                $item->tag('client');
+
+                return $client;
+            });
     }
 
     /**
