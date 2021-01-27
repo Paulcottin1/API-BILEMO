@@ -6,10 +6,13 @@ namespace App\Controller;
 
 use App\Entity\User;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use Psr\Cache\InvalidArgumentException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class UserController extends AbstractController
 {
@@ -37,13 +40,24 @@ class UserController extends AbstractController
     /**
      * Return user connected information
      * @Rest\Get(path="/api/user/{id}")
-     * @Rest\View(StatusCode = 200)
+     * @Rest\View(
+     *     StatusCode = 200,
+     *     serializerGroups={"user"}
+     *     )
      * @Security("userConnected.getId() == user.getId()")
      * @param User $userConnected
+     * @param TagAwareCacheInterface $cache
      * @return User
+     * @throws InvalidArgumentException
      */
-    public function user(User $userConnected)
+    public function user(User $userConnected, TagAwareCacheInterface $cache)
     {
-        return $userConnected;
+        return $cache->get('user'. $userConnected->getId(),
+            function (ItemInterface $item) use ($userConnected) {
+                $item->expiresAfter(3600);
+                $item->tag('user');
+
+                return $userConnected;
+            });
     }
 }
