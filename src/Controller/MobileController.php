@@ -6,8 +6,13 @@ namespace App\Controller;
 
 use App\Entity\Mobile;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use Knp\Component\Pager\PaginatorInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class MobileController extends AbstractController
 {
@@ -22,15 +27,23 @@ class MobileController extends AbstractController
      *     serializerGroups={"mobile"}
      * )
      * @param Mobile $mobile
+     * @param TagAwareCacheInterface $cache
      * @return Mobile
+     * @throws InvalidArgumentException
      */
-    public function mobile(Mobile $mobile)
+    public function mobile(Mobile $mobile, TagAwareCacheInterface $cache)
     {
         if(!$mobile->getUsers()->contains($this->getUser())) {
             throw new AccessDeniedHttpException('This mobile does not belong to you');
         }
 
-        return $mobile;
+        return $cache->get('mobile'. $mobile->getId(),
+            function (ItemInterface $item) use ($mobile) {
+                $item->expiresAfter(3600);
+                $item->tag('mobile');
+
+                return $mobile;
+            });
     }
 
     /**
@@ -40,10 +53,23 @@ class MobileController extends AbstractController
      *     StatusCode = 200,
      *     serializerGroups={"mobile"}
      * )
-     * @return \App\Entity\Mobile[]
+     * @param TagAwareCacheInterface $cache
+     * @param PaginatorInterface $paginator
+     * @param Request $request
+     * @return Mobile[]
+     * @throws InvalidArgumentException
      */
-    public function clientsList()
+    public function mobileList(TagAwareCacheInterface $cache, PaginatorInterface $paginator, Request $request)
     {
-        return $this->getUser()->getMobiles();
+        $page = $request->query->getInt('page', 1);
+
+        return $cache->get('mobiles'. $this->getUser()->getId() . $page,
+            function (ItemInterface $item) use ( $paginator, $page) {
+                $item->expiresAfter(3600);
+                $item->tag('client');
+                $data = $this->getUser()->getMobiles();
+
+                return $paginator->paginate($data, $page, 4);
+            });
     }
 }
